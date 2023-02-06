@@ -1,0 +1,73 @@
+$ go mod init
+
+
+type Message struct {
+    Id int64 `json:"id,omitempty" form:"id"`
+    Userid int64 `json:"userid,omitempty" form:"userid"`
+    Cmd int `json:"cmd,omitempty" form:"cmd"`
+    Dstid int64 `json:"dstid,omitempty" form:"dstid"`
+    Media int `json:"media,omitempty" form:"media"`
+    Content string `json:"content,omitempty" form:"content"`
+    Pic string `json:"pic,omitempty" form:"pic"`
+    Url string `json:"url,omitempty" form:"url"`
+    Memo string `json:"memo,omitempty" form:"memo"`
+    Amount int `json:"amount,omitempty" form:"amount"`
+}
+
+
+type ClientNode struct {
+    Conn *websocket.Conn
+    ...
+}
+var ClientMap map[int64]*ClientNode = make(map[int64]*ClientNode)
+
+3-2 , 16:24
+
+-- websocket need send heartbeat to server
+-- when to send heartbeat : after 30s of last contact with server
+
+-- send data queue
+var dataqueue=[]
+function push(m) {
+    if (!dataqueue) {
+        dataqueue=[]
+    }
+    dataqueue.push(m)
+}
+function pop() {
+    if(!!dataqueue) {
+        return data dataqueue.shift();
+    } else {
+        return null
+    }
+}
+
+-- frontend receive Message
+websocket.onmessage = function(event) {
+
+}
+data = JSON.parse(event.data)
+
+*** process flow of A send message to B
+1. A try to open websocket , path : /chat?id=xxx&token=yyy
+2. backend go through authentication , set up userid => socket mapping
+3. start goroutine, using conn.ReadMessage wait and read message
+4. A send Json message string, include B id -> dstid
+5. if send to group message then become group id dstid = groupid
+6. from ClientMap[userid] server side gain user's conn handle
+7. conn.WriteMessage to B or Dst Group
+
+*** 4-1 06:28 ***
+
+web http core API
+
+func HandleFunc(
+    pattern string, // request pattern , etc /user/login
+    handler func(ResponseWriter, *Request) // handle function
+)
+
+// start server
+func ListenAndServe(
+    addr string, // like :8080
+    handler Handler
+)
